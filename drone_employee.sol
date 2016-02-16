@@ -10,7 +10,7 @@ contract DroneEmployee is ROSCompatible, Aircraft {
     SatFix[] public checkpoints;
 
     /* Initial */
-    function SmallAircraft (ATC _controller) {
+    function DroneEmployee(ATC _controller) {
         controller = _controller;
         targetPub = mkPublisher("target",
                                 'dron_common_msgs/RouteResponse');
