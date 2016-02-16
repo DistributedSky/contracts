@@ -1,19 +1,34 @@
 import 'atc_interface';
 
-contract DroneEmployee is ROSCompatible, Aircraft {
-    Publisher targetPub;
-    ATC controller;
-    
-    event TakeFlight();
-    event SetRoute();
+contract RouteReleaseHandler is MessageHandler {
+    DroneEmployee master;
 
+    function RouteReleaseHandler(DroneEmployee _master) {
+        master = _master;
+    }
+
+    function incomingMessage(Message _msg) {
+        if (master == msg.sender) {
+            StdUInt32 route_id = StdUInt32(_msg);
+            master.flightDone(route_id.data());
+        }
+    }
+}
+
+contract DroneEmployee is ROSCompatible, Aircraft {
     SatFix[] public checkpoints;
+    Publisher routePub;
+    ATC controller;
 
     /* Initial */
     function DroneEmployee(ATC _controller) {
         controller = _controller;
-        targetPub = mkPublisher("target",
-                                'dron_common_msgs/RouteResponse');
+    }
+
+    function initROS() {
+        routePub = mkPublisher('route',
+                               'dron_common_msgs/RouteResponse');
+        mkSubscriber('release', 'std_msgs/UInt32', new RouteReleaseHandler(this));
     }
     
     function addCheckpoint(int256 latitude, int256 longitude, int256 altitude) {
@@ -22,16 +37,18 @@ contract DroneEmployee is ROSCompatible, Aircraft {
     }
     
     function takeFlight() {
-        TakeFlight();
         controller.makeRoute(checkpoints);
     }
 
-    function setRoute(RouteResponse _res) {
-        SetRoute();
-        
-        if (_res.valid())
-            targetPub.publish(_res);
-            
-        delete checkpoints;
+    function flightDone(uint32 _route_id) {
+        controller.dropRoute(_route_id);
+    }
+
+    function setRoute(RouteResponse _response) {
+        if (msg.sender == address(controller)) {
+            routePub.publish(_response);
+            delete checkpoints;
+            checkpoints.length = 0;
+        }
     }
 }

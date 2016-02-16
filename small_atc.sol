@@ -1,7 +1,7 @@
 import 'atc_interface';
 
 contract ResponseListener is MessageHandler {
-    address[] clients;
+    address[] public clients;
     
     function newRequest(address _addr) returns (uint32) {
         clients[clients.length++] = _addr;
@@ -19,8 +19,6 @@ contract SmallATC is ROSCompatible, ATC {
     Publisher   route_remover;
     ResponseListener listener;
     
-    event NewRequest(uint32 id);
-    
     function SmallATC() {
         route_request = mkPublisher('/small_atc/route/request',
                                     'dron_common_msgs/RouteRequest');
@@ -34,11 +32,11 @@ contract SmallATC is ROSCompatible, ATC {
     
     function makeRoute(SatFix[] _checkpoints) {
         uint32 id = listener.newRequest(msg.sender);
-        NewRequest(id);
         route_request.publish(new RouteRequest(_checkpoints, id));
     }
     
     function dropRoute(uint32 _id) {
-        route_remover.publish(new StdUInt32(_id));
+        if (listener.clients(_id) == msg.sender)
+            route_remover.publish(new StdUInt32(_id));
     }
 }
