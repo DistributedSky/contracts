@@ -27,8 +27,8 @@ contract DroneEmployee is ROSCompatible, Aircraft {
 
     function initROS() {
         routePub = mkPublisher('route',
-                               'dron_common_msgs/RouteResponse');
-        mkSubscriber('release', 'std_msgs/UInt32', new RouteReleaseHandler(this));
+                               'small_atc_msgs/RouteResponse');
+        mkSubscriber('remove', 'std_msgs/UInt32', new RouteReleaseHandler(this));
     }
     
     function addCheckpoint(int256 latitude, int256 longitude, int256 altitude) {

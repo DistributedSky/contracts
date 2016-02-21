@@ -21,7 +21,7 @@ contract SmallATC is ROSCompatible, ATC {
     
     function SmallATC() {
         route_request = mkPublisher('/small_atc/route/request',
-                                    'dron_common_msgs/RouteRequest');
+                                    'small_atc_msgs/RouteRequest');
         route_remover = mkPublisher('/small_atc/route/remove',
                                     'std_msgs/UInt32');
         listener = new ResponseListener();
