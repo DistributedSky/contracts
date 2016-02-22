@@ -12,7 +12,7 @@ contract DroneEmployee is ROSCompatible, Aircraft {
     /* Initial */
     function DroneEmployee(ATC _controller) {
         controller = _controller;
-        targetPub = mkPublisher("target",
+        targetPub = mkPublisher('route',
                                 'small_atc_msgs/RouteResponse');
     }
 
