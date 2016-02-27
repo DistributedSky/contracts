@@ -5,13 +5,13 @@ contract DroneCarrier is DroneEmployee{
     Publisher pub_dropLon;
     
     function DroneCarrier(ATC _controller) DroneEmployee(_controller) {
-        pub_dropLat = mkPublisher('drop_target_lat', 'std_msgs/UInt32');
-        pub_dropLon = mkPublisher('drop_target_lon', 'std_msgs/UInt32');
+        pub_dropLat = mkPublisher('drop_target_lat', 'std_msgs/Int64');
+        pub_dropLon = mkPublisher('drop_target_lon', 'std_msgs/Int64');
     }
-    
+
     function addDropPoint(int256 latitude, int256 longitude, int256 altitude) {
         addCheckpoint(latitude, longitude, altitude);
-        pub_dropLat.publish(new StdUInt32(uint32(latitude)));
-        pub_dropLon.publish(new StdUInt32(uint32(longitude)));
+        pub_dropLat.publish(new StdInt64(int64(latitude)));
+        pub_dropLon.publish(new StdInt64(int64(longitude)));
     }
 }

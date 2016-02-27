@@ -53,3 +53,11 @@ contract StdUInt32 is Message {
         data = _data;
     }
 }
+
+contract StdInt64 is Message {
+    int64 public data;
+
+    function StdInt64(int64 _data) {
+        data = _data;
+    }
+}
