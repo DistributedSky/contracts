@@ -1,11 +1,11 @@
 import 'token';
 import 'market';
 import 'atc_interface';
-import 'ATCE';
+import 'small_atc_external';
 
 contract FlightDoneHandler is MessageHandler {
     DroneEmployeeE master;
-    
+
     function FlightDoneHandler(DroneEmployeeE _master) {
         master = _master;
     }
@@ -18,36 +18,33 @@ contract FlightDoneHandler is MessageHandler {
 }
 
 contract DroneEmployeeE is ROSCompatible {
-    address creator;
     // Commercy
     token  droneToken;
-    token  atcToken;
     market droneMarket;
     ATCE atc;
     address internalDroneAddress;
+    address creator;
     // ROS
     Publisher targetPub;
     // Events
     event FlightDown();
     event FlightUp(int latitude, int longitude, int altitude);
-    
-    function DroneEmployeeE(market _marketAddress, ATCE _atc, 
-                            token _atcToken, address _internalAddress) {
-        creator = msg.sender;
+
+    function DroneEmployeeE(market _marketAddress, ATCE _atc, address _internalAddress) {
         droneMarket = _marketAddress;
         atc = _atc;
-        atcToken = _atcToken;
         internalDroneAddress = _internalAddress;
+        creator = msg.sender;
         // Aproove atc
-        _atcToken.approve(atc);
+        atc.getToken().approve(atc);
     }
-    
+
     function init() returns (bool) {
         if (msg.sender != creator) return false;
         return makeToken() && initROS();
     }
-    
-    function makeToken() returns (bool) {
+
+    function makeToken() private returns (bool) {
         // Making a new drone token
         droneToken = new token("TCK", "Cargo Delivery Ticket", 0, this);
         if (!droneToken.emission(1))
@@ -56,27 +53,34 @@ contract DroneEmployeeE is ROSCompatible {
         droneMarket.addSell(address(droneToken), 1, 2, 1, 1);
         return true;
     }
-    
-    function initROS() returns (bool) {
+
+    function initROS() private returns (bool) {
         targetPub = mkPublisher('target_request', 'small_atc_msgs/SatFix');
         mkSubscriber('release', 'std_msgs/UInt32', new FlightDoneHandler(this));
         return true;
     }
 
-    function buyATCToken() returns (bool) {
-        uint order_id = droneMarket.sellCountAsset(atcToken);
-        return droneMarket.dealSell(atcToken, order_id, 1);
+    function buyATCToken() private returns (bool) {
+        if (atc.getToken().getBalance(this) > 0) return true;
+        uint order_id = droneMarket.sellCountAsset(atc.getToken());
+        return droneMarket.dealSell(atc.getToken(), order_id, 1);
+    }
+
+    function getToken() constant returns (token) {
+        return droneToken;
     }
 
     function flightTo(int256 _latitude, int256 _longitude, int256 _altitude) returns (bool) {
-        if (!buyATCToken()) return false;
-        if (!atc.paymentFor(internalDroneAddress)) return false;
         if (!droneToken.transferFrom(msg.sender, this, 1)) return false;
+        if (!buyATCToken() || !atc.paymentFor(internalDroneAddress)) {
+            droneToken.transfer(msg.sender, 1);
+            return false;
+        }
         targetPub.publish(new SatFix(_latitude, _longitude, _altitude));
         FlightUp(_latitude, _longitude, _altitude);
         return true;
     }
-    
+
     function flightDone() {
         droneMarket.addSell(address(droneToken), 1, 2, 1, 1);
         FlightDown();
