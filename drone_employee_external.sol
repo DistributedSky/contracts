@@ -19,8 +19,8 @@ contract FlightDoneHandler is MessageHandler {
 
 contract DroneEmployeeE is ROSCompatible {
     // Commercy
-    token  droneToken;
-    market droneMarket;
+    token  public droneToken;
+    market public droneMarket;
     ATCE atc;
     address internalDroneAddress;
     address creator;
@@ -33,41 +33,30 @@ contract DroneEmployeeE is ROSCompatible {
     function DroneEmployeeE(market _marketAddress, ATCE _atc, address _internalAddress) {
         droneMarket = _marketAddress;
         atc = _atc;
+        atc.atcToken().approve(atc);
         internalDroneAddress = _internalAddress;
         creator = msg.sender;
-        // Aproove atc
-        atc.getToken().approve(atc);
     }
 
     function init() returns (bool) {
         if (msg.sender != creator) return false;
-        return makeToken() && initROS();
-    }
-
-    function makeToken() private returns (bool) {
         // Making a new drone token
         droneToken = new token("TCK", "Cargo Delivery Ticket", 0, this);
         if (!droneToken.emission(1))
             return false;
         // Sell token on market
+        droneToken.approve(droneMarket);
         droneMarket.addSell(address(droneToken), 1, 2, 1, 1);
-        return true;
-    }
-
-    function initROS() private returns (bool) {
+        // Init ROS
         targetPub = mkPublisher('target_request', 'small_atc_msgs/SatFix');
         mkSubscriber('release', 'std_msgs/UInt32', new FlightDoneHandler(this));
         return true;
     }
 
     function buyATCToken() private returns (bool) {
-        if (atc.getToken().getBalance(this) > 0) return true;
-        uint order_id = droneMarket.sellCountAsset(atc.getToken());
-        return droneMarket.dealSell(atc.getToken(), order_id, 1);
-    }
-
-    function getToken() constant returns (token) {
-        return droneToken;
+        if (atc.atcToken().getBalance(this) > 0) return true;
+        uint order_id = droneMarket.sellCountAsset(atc.atcToken());
+        return droneMarket.dealSell(atc.atcToken(), order_id, 1);
     }
 
     function flightTo(int256 _latitude, int256 _longitude, int256 _altitude) returns (bool) {
