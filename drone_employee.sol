@@ -1,28 +1,28 @@
 import 'drone_employee_interface.sol';
+import 'drone_employee_ros.sol';
 
 contract DroneEmployee is Mortal, DroneEmployeeInterface {
     /* Flight regulator */
     AirTrafficControllerInterface atc;
-    /* Drone ROS interface */
-    DroneEmployeeROS ros;
     
+    /* Price of one drone flight */
     uint constant flightPrice = 10;
 
     /* Drone Employee contract constructor */
-    function DroneEmployee(AirTrafficControllerInterface _atc, Market _market, Token _publicToken)
+    function DroneEmployee(address _endpoint, // Drone ROS hardware ether address
+                           AirTrafficControllerInterface _atc, // Air traffic regulator
+                           Market _market, Token _publicToken) // DAO market and token
             MarketAgent (_publicToken, _market) {
+        getROSInterface = new DroneEmployeeROS(_endpoint, _atc.getROSInterface());
         atc = _atc;
     }
-    
+
     function makeToken() internal {
         /* Make a token and place token on the market */
         getToken = new Token("DroneEmployee Ticket", "DET");
         getToken.emission(1);
         placeLot(1, flightPrice);
     }
-    
-    function setROSInterface(DroneEmployeeROS _ros) onlyOwner
-    { ros = _ros; }
 
     function buyATCToken() internal returns (bool) {
         /* So drone aleady have positive balance on ATC token */
@@ -43,25 +43,30 @@ contract DroneEmployee is Mortal, DroneEmployeeInterface {
         return true;
     }
 
-    function flightTo(int256 _latitude, int256 _longitude, int256 _altitude) returns (bool) {
+    function getFlight() returns (Flight) {
         /* Sender have positive balance on drone token */
         if (getToken.getBalance(msg.sender) > 0) {
             
             /* Drone have ATC tokens and ATC payment processed */
-            if (buyATCToken() && atc.paymentFor(ros.getInternal())) {
+            if (buyATCToken() && atc.paymentFor(getROSInterface)) {
                 /* Transfer ticket to drone */
                 getToken.transferFrom(msg.sender, this, 1);
                 
-                /* Flight by ROS interface */
-                ros.flightTo(_latitude, _longitude, _altitude);
-                return true;
+                /* Make a flight plan contract */
+                var plan = new Flight();
+                
+                /* Delegate plan to sender */
+                plan.delegate(msg.sender);
+                
+                /* Return flight plan to sender */
+                return plan;
             }
         }
-        return false;
+        throw;
     }
 
     function flightDone() {
-        if (msg.sender == address(ros)) {
+        if (msg.sender == address(getROSInterface)) {
             /* Flight done, place token on the market */
             placeLot(1, flightPrice);
         }

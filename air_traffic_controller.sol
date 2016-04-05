@@ -1,13 +1,14 @@
 import 'drone_employee_interface.sol';
+import 'air_traffic_controller_ros.sol';
 
 contract AirTrafficController is Mortal, AirTrafficControllerInterface {
-    /* ATC ROS interface */
-    AirTrafficControllerROS ros;
-    
+    /* Route controller token price */
     uint constant routePrice = 100;
 
-    function AirTrafficController(Market _market, Token _publicToken)
-            MarketAgent(_publicToken, _market) {}
+    function AirTrafficController(address _endpoint, Market _market, Token _publicToken)
+            MarketAgent(_publicToken, _market) {
+        getROSInterface = new AirTrafficControllerROS(_endpoint);
+    }
 
     function makeToken() internal {
         /* Make a token and place token on the market */
@@ -17,21 +18,26 @@ contract AirTrafficController is Mortal, AirTrafficControllerInterface {
             placeLot(1, routePrice);
     }
 
-    function setROSInterface(AirTrafficControllerROS _ros) onlyOwner
-    { ros = _ros; }
-
     function paymentFor(address _drone) returns (bool) {
+        /* Check payer balance */
         if (getToken.getBalance(_drone) > 0) {
+            /* Transfer token */
             getToken.transferFrom(_drone, this, 1);
-            ros.payed(_drone);
+
+            /* Register address as payed for ROS interface */
+            isPaid[_drone] = true;
             return true;
         }
         return false;
     }
     
-    function released() {
+    function release(address _drone) {
         /* ROS interface signal about released route */
-        if (msg.sender == address(ros)) {
+        if (msg.sender == address(getROSInterface)) {
+            /* Unregister released address from payed */
+            isPaid[_drone] = false;
+            
+            /* Place lot on market */
             placeLot(1, routePrice);
         }
     }

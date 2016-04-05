@@ -1,13 +1,13 @@
-import 'ROS';
+import 'ROS.sol';
 
 /*** Aircraft interface ***/
 contract Aircraft {
     function setRoute(RouteResponse route);
 }
 
-/*** ATC interface ***/
-contract ATC {
-    function makeRoute(SatFix[] _checkpoints);
+/*** Route controller interface ***/
+contract RouteController {
+    function makeRoute(Checkpoint[] _checkpoints);
     function dropRoute(uint32 id);
 }
 
@@ -24,11 +24,23 @@ contract SatFix is Message {
     }
 }
 
+contract Checkpoint is Message {
+    SatFix public position;
+    uint32 public azimuth;
+    uint32 public duration;
+    
+    function Checkpoint(SatFix _position, uint32 _azimuth, uint32 _duration) {
+        position = _position;
+        azimuth  = _azimuth;
+        duration = _duration;
+    }
+}
+
 contract RouteRequest is Message {
-    SatFix[] public checkpoints;
+    Checkpoint[] public checkpoints;
     uint32 public id;
     
-    function RouteRequest(SatFix[] _checkpoints, uint32 _id) {
+    function RouteRequest(Checkpoint[] _checkpoints, uint32 _id) {
         checkpoints = _checkpoints;
         id = _id;
     }
