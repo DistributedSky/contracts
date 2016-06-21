@@ -1,11 +1,13 @@
 import 'interface/AirTrafficControllerInterface.sol';
+import 'creator/CreatorToken.sol';
+import 'market/Market.sol';
 
-contract AirTrafficController is Mortal, AirTrafficControllerInterface {
+contract AirTrafficController is AirTrafficControllerInterface {
     /* Route controller token price */
-    uint routePrice = 100;
+    uint public routePrice = 100;
 
     function setRoutePrice(uint _price) onlyOwner
-    { routePrice _price; }
+    { routePrice = _price; }
 
     uint constant routeCount = 10;
 
@@ -17,11 +19,14 @@ contract AirTrafficController is Mortal, AirTrafficControllerInterface {
                                   address _market,
                                   address _credits) {
         name    = _name;
-        area    = SatFix[](_area);
+        // Copy area polygon
+        for (uint32 ix = 0; ix < _area.length; ix +=1)
+            area.push(SatFix(_area[ix]));
+
         market  = Market(_market);
         credits = Token(_credits);
-        token   = TokenCreator.create("ATC Ticket", "ATC", 0, routeCount);
-        for (uint i = 0; i < routeCount; i += 1)
+        token   = CreatorToken.create("ATC Ticket", "ATC", 0, routeCount);
+        for (uint32 i = 0; i < routeCount; i += 1)
             placeToken();
     }
 
@@ -42,7 +47,7 @@ contract AirTrafficController is Mortal, AirTrafficControllerInterface {
     
     function release(address _drone) {
         /* ROS interface signal about released route */
-        if (msg.sender != getROSInterface) throw;
+        if (msg.sender != address(getROSInterface)) throw;
 
         /* Unregister released address from payed */
         isPaid[_drone] = false;

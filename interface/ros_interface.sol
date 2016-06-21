@@ -1,4 +1,4 @@
-import 'ROS.sol';
+import 'dapp/ROS.sol';
 
 /*** Aircraft interface ***/
 contract Aircraft {

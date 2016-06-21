@@ -36,14 +36,15 @@ contract AirTrafficControllerROS is ROSCompatible, RouteController, Mortal {
     }
 
     function makeRoute(Checkpoint[] _checkpoints) {
-        if (atc.isPaid(msg.sender)) {
-            uint32 id = listener.newRequest(msg.sender);
-            route_request.publish(new RouteRequest(_checkpoints, id));
-        }
+        if (!atc.isPaid(msg.sender)) throw;
+
+        uint32 id = listener.newRequest(msg.sender);
+        route_request.publish(new RouteRequest(_checkpoints, id));
     }
 
     function dropRoute(uint32 _id) {
         if (listener.clients(_id) != msg.sender) throw;
+
         route_remover.publish(new StdUInt32(_id));
     }
     

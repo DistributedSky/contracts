@@ -1,5 +1,6 @@
 import './ros_interface.sol';
 import './DroneEmployeeROSInterface.sol';
+import 'common/Mortal.sol';
 
 /* Flight plan contract */
 contract FlightPlan is Mortal {

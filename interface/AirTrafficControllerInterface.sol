@@ -1,7 +1,8 @@
 import './ros_interface.sol';
 import 'token/Token.sol';
+import 'common/Mortal.sol';
 
-contract AirTrafficControllerInterface is Owned{
+contract AirTrafficControllerInterface is Mortal {
     string   public name;
     SatFix[] public area;
 

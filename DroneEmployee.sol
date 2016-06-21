@@ -1,7 +1,7 @@
 import 'interface/AirTrafficControllerInterface.sol';
 import 'interface/DroneEmployeeInterface.sol';
 import 'ros/DroneEmployeeROS.sol';
-import 'creator/TokenCreator.sol';
+import 'creator/CreatorToken.sol';
 import 'market/Market.sol';
 
 contract DroneEmployee is DroneEmployeeInterface {
@@ -12,7 +12,7 @@ contract DroneEmployee is DroneEmployeeInterface {
     Token  public credits;
 
     /* Price of one drone flight */
-    uint flightPrice = 10;
+    uint public flightPrice = 10;
 
     function setFlightPrice(uint _price) onlyOwner
     { flightPrice = _price; }
@@ -31,7 +31,7 @@ contract DroneEmployee is DroneEmployeeInterface {
         credits = Token(_credits);
 
         /* Make a token and place token on the market */
-        tickets = TokenCreator.create("DroneEmployee Ticket", "DET", 0, 1);
+        tickets = CreatorToken.create("DroneEmployee Ticket", "DET", 0, 1);
         placeTicket();
     }
 
@@ -48,8 +48,8 @@ contract DroneEmployee is DroneEmployeeInterface {
         Lot found;
         for (var lot = market.first(); lot != Lot(0); lot = market.next(lot)) {
             // Search for the first open lot
-            if (lot.seller() == atc && !lot.closed()) {
-                foud = lot;
+            if (lot.seller() == address(atc) && !lot.closed()) {
+                found = lot;
                 break;
             }
         }
@@ -57,7 +57,7 @@ contract DroneEmployee is DroneEmployeeInterface {
         /* Approve lot and deal */
         credits.approve(found, found.price());
         if (!found.deal()) {
-            credits.unapprove(best);
+            credits.unapprove(found);
             return false;
         }
         return true;
@@ -80,7 +80,7 @@ contract DroneEmployee is DroneEmployeeInterface {
         plan.delegate(msg.sender);
 
         /* Return flight plan to sender */
-        FlightPlanCreated(plan);
+        FlightPlanCreated(msg.sender, plan);
         return plan;
     }
 

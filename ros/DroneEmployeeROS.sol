@@ -23,19 +23,19 @@ contract DroneEmployeeROS is ROSCompatible, DroneEmployeeROSInterface {
     }
 
     function flight(Checkpoint[] _checkpoints) {
-        if (msg.sender != plan) throw;
+        if (msg.sender != address(flightPlan)) throw;
         
         controller.makeRoute(_checkpoints);
     }
 
     function setRoute(RouteResponse _response) {
-        if (msg.sender != controller) throw;
+        if (msg.sender != address(controller)) throw;
         
         routePub.publish(_response);
     }
 
     function flightDone(uint32 _route_id) {
-        if (msg.sender != releaseHandler) throw; 
+        if (msg.sender != address(releaseHandler)) throw; 
         
         controller.dropRoute(_route_id);
         drone.flightDone();

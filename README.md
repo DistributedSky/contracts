@@ -2,8 +2,13 @@
 
 This repositury contains *Ethereum* DApps for **DroneEmployee** project.
 
-Repository structure:
+## Deploy with AIRA Deploy
 
-* **atc_interface.sol** - air traffic controller interface and data structures
-* **small_atc.sol** - small air traffic controller contract
-* **drone_employee.sol** - drone employee contract
+Clone [aira_ros_bridge](https://github.com/airalab/aira_ros_bridge), [airalab/core](https://github.com/airalab/core) and this.
+
+Run in **airalab/core**:
+
+    $ ./aira_deploy.sh -O -I ../contracts:../aira_ros_bridge/aira_ros_bridge -C ${CONTRACT}
+
+*Set arguments according to contract constructor.*
+

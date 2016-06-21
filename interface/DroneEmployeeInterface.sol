@@ -1,8 +1,9 @@
 import './FlightPlan.sol';
+import 'common/Mortal.sol';
 import 'token/Token.sol';
 
 /* Base drone contract */
-contract DroneEmployeeInterface is Owned {
+contract DroneEmployeeInterface is Mortal {
     /* Drone name */
     string public name;
 
@@ -22,6 +23,6 @@ contract DroneEmployeeInterface is Owned {
     
     /* Done the flight, used by ROS interface */
     function flightDone() {
-        if (msg.sender != getROSInterface) throw;
+        if (msg.sender != address(getROSInterface)) throw;
     }
 }
