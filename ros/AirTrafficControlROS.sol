@@ -1,4 +1,5 @@
-import 'drone_employee_interface.sol';
+import 'interface/ros_interface.sol';
+import 'interface/AirTrafficControllerInterface.sol';
 
 contract ResponseListener is MessageHandler, Mortal {
     address[] public clients;
@@ -16,11 +17,14 @@ contract ResponseListener is MessageHandler, Mortal {
 }
 
 contract AirTrafficControllerROS is ROSCompatible, RouteController, Mortal {
-    Publisher   route_request;
-    Publisher   route_remover;
-    ResponseListener listener;
+    Publisher                     route_request;
+    Publisher                     route_remover;
+    ResponseListener              listener;
+    AirTrafficControllerInterface atc;
 
-    function AirTrafficControllerROS(address _endpoint) ROSCompatible(_endpoint) {
+    function AirTrafficControllerROS(address _endpoint, address _atc) ROSCompatible(_endpoint) {
+        atc = AirTrafficControllerInterface(_atc);
+
         route_request = mkPublisher('route/request',
                                     'small_atc_msgs/RouteRequest');
         route_remover = mkPublisher('route/remove', 'std_msgs/UInt32');
@@ -32,7 +36,6 @@ contract AirTrafficControllerROS is ROSCompatible, RouteController, Mortal {
     }
 
     function makeRoute(Checkpoint[] _checkpoints) {
-        var atc = AirTrafficControllerInterface(owner);
         if (atc.isPaid(msg.sender)) {
             uint32 id = listener.newRequest(msg.sender);
             route_request.publish(new RouteRequest(_checkpoints, id));
@@ -40,12 +43,13 @@ contract AirTrafficControllerROS is ROSCompatible, RouteController, Mortal {
     }
 
     function dropRoute(uint32 _id) {
-        if (listener.clients(_id) == msg.sender)
-            route_remover.publish(new StdUInt32(_id));
+        if (listener.clients(_id) != msg.sender) throw;
+        route_remover.publish(new StdUInt32(_id));
     }
     
     function setRoute(Aircraft _aircraft, RouteResponse _response) {
-        if (msg.sender == address(listener))
-            _aircraft.setRoute(_response);
+        if (msg.sender != address(listener)) throw;
+        
+        _aircraft.setRoute(_response);
     }
 }

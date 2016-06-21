@@ -1,4 +1,4 @@
-import 'drone_employee_interface.sol';
+import 'interface/DroneEmployeeInterface.sol';
 
 contract RouteReleaseHandler is MessageHandler, Mortal {
     function incomingMessage(Message _msg) onlyOwner {
@@ -8,32 +8,36 @@ contract RouteReleaseHandler is MessageHandler, Mortal {
 }
 
 contract DroneEmployeeROS is ROSCompatible, DroneEmployeeROSInterface {
+    DroneEmployeeInterface drone;
     Publisher           routePub;
     RouteController     controller;
     RouteReleaseHandler releaseHandler;
 
     /* Initial */
-    function DroneEmployeeROS(address _endpoint, RouteController _controller) ROSCompatible(_endpoint) {
-        controller = _controller;
-        routePub = mkPublisher('route', 'small_atc_msgs/RouteResponse');
+    function DroneEmployeeROS(address _endpoint, address _controller, address _drone) ROSCompatible(_endpoint) {
+        drone      = DroneEmployeeInterface(_drone);
+        controller = RouteController(_controller);
+        routePub   = mkPublisher('route', 'small_atc_msgs/RouteResponse');
         releaseHandler = new RouteReleaseHandler();
         mkSubscriber('release', 'std_msgs/UInt32', releaseHandler);
     }
 
     function flight(Checkpoint[] _checkpoints) {
-        if (msg.sender == address(plan))
-            controller.makeRoute(_checkpoints);
+        if (msg.sender != plan) throw;
+        
+        controller.makeRoute(_checkpoints);
     }
 
     function setRoute(RouteResponse _response) {
-        if (msg.sender == address(controller))
-            routePub.publish(_response);
+        if (msg.sender != controller) throw;
+        
+        routePub.publish(_response);
     }
 
     function flightDone(uint32 _route_id) {
-        if (msg.sender == address(releaseHandler)) {
-            controller.dropRoute(_route_id);
-            DroneEmployeeInterface(owner).flightDone();
-        }
+        if (msg.sender != releaseHandler) throw; 
+        
+        controller.dropRoute(_route_id);
+        drone.flightDone();
     }
 }
