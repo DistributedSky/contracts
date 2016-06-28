@@ -31,9 +31,8 @@ contract AirTrafficController is AirTrafficControllerInterface {
     }
 
     function placeToken() internal {
-        var lot = new Lot(token, credits, 1, routePrice);
+        var lot = market.append(this, token, credits, 1, routePrice);
         token.approve(lot, 1);
-        market.append(lot);
     }
 
     function pay(address _drone) returns (bool) {

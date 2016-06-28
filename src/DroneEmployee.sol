@@ -36,9 +36,8 @@ contract DroneEmployee is DroneEmployeeInterface {
     }
 
     function placeTicket() internal {
-        var lot = new Lot(tickets, credits, 1, flightPrice);
+        var lot = market.append(this, tickets, credits, 1, flightPrice);
         tickets.approve(lot, 1);
-        market.append(lot);
     }
 
     function buyATCToken() internal returns (bool) {
