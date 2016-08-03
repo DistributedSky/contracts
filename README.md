@@ -1,7 +1,7 @@
 # DAO «Drone Employee»
 > DAO DE work only on Ethereum testnet today.
 
-- **Drone Employee DAO** testnet address: ``
+- **Drone Employee DAO** testnet address: `0x810734e6f77c634a5402783c186383d4ab7fceac`
 
 ## Workflow
 
