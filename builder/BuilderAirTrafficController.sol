@@ -18,13 +18,14 @@ contract BuilderAirTrafficController is Builder {
     /**
      * @dev Run script creation contract
      * @param _name is an ATC name
+     * @param _area is an ATC area polygon
      * @param _market is a market for trading
      * @param _credits is a traded credits
      * @param _endpoint is a hardware ATC endpoint
      * @return address new contract
      */
     function create(string _name,
-                    address[] _area,
+                    SatFix[] _area,
                     Market _market,
                     Token _credits,
                     address _endpoint) returns (address) {
