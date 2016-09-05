@@ -4,20 +4,12 @@
 //
 
 import 'creator/CreatorSatFix.sol';
+import 'builder/Builder.sol';
 
 /**
  * @title BuilderSatFix contract
  */
-contract BuilderSatFix {
-
-    /* The builded SatFixes */
-    mapping (address => address[]) public getContractOf;
-
-    /**
-     * @dev this event emitted for every builded contract
-     */
-    event Builded(address indexed sender, address indexed instance);
-
+contract BuilderSatFix is Builder {
     /**
      * @dev Run script creation contract
      * @param _latitude is an latitude
@@ -30,7 +22,7 @@ contract BuilderSatFix {
                     int256 _altitude)
                     returns (address) {
         var inst = CreatorSatFix.create(_latitude, _longitude, _altitude);
-        getContractOf[msg.sender].push(inst);
+        getContractsOf[msg.sender].push(inst);
         Builded(msg.sender, inst);
         return inst;
     }
@@ -45,9 +37,5 @@ contract BuilderSatFix {
                     int256 _longitude)
                     returns (address) {
         return create(_latitude, _longitude, 0);
-    }
-
-    function getLastContract() constant returns (address) {
-        return getContractOf[msg.sender][getContractsOf[msg.sender].length - 1];
     }
 }

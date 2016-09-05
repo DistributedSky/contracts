@@ -11,10 +11,6 @@ import 'builder/Builder.sol';
  * @title BuilderDroneEmployee contract
  */
 contract BuilderDroneEmployee is Builder {
-    function BuilderDroneEmployee(uint _buildingCost, address _cashflow, address _proposal)
-             Builder(_buildingCost, _cashflow, _proposal)
-    {}
-    
     /**
      * @dev Run script creation contract
      * @param _name is a drone name
@@ -22,6 +18,7 @@ contract BuilderDroneEmployee is Builder {
      * @param _atc is an ATC contract
      * @param _market is market for trading
      * @param _credits is a traded token
+     * @param _video_streaming is a flag for enabling video streaming
      * @param _endpoint is a drone hardware endpoint address
      * @return address new contract
      */
@@ -30,8 +27,9 @@ contract BuilderDroneEmployee is Builder {
                     AirTrafficControllerInterface _atc,
                     Market _market,
                     Token _credits,
+                    bool _video_streaming,
                     address _endpoint) returns (address) {
-        var inst = CreatorDroneEmployee.create(_name, _baseCoords, _atc, _market, _credits);
+        var inst = CreatorDroneEmployee.create(_name, _baseCoords, _atc, _market, _credits, _video_streaming);
         var ros  = CreatorDroneEmployeeROS.create(_endpoint, _atc.getROSInterface(), inst); 
 
         ros.delegate(inst);

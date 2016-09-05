@@ -1,8 +1,8 @@
 import 'src/DroneEmployee.sol';
 
 library CreatorDroneEmployee {
-    function create(string _name, address _baseCoords, address _atc, address _market, address _credits) returns (DroneEmployee)
-    { return new DroneEmployee(_name, _baseCoords, _atc, _market, _credits); }
+    function create(string _name, address _baseCoords, address _atc, address _market, address _credits, bool _video_streaming) returns (DroneEmployee)
+    { return new DroneEmployee(_name, _baseCoords, _atc, _market, _credits, _video_streaming); }
 
     function version() constant returns (string)
     { return "v0.4.0 (bab31dcb)"; }

@@ -1,10 +1,11 @@
 import 'interface/AirTrafficControllerInterface.sol';
 import 'interface/DroneEmployeeInterface.sol';
+import 'interface/Streaming.sol';
 import 'ros/DroneEmployeeROS.sol';
 import 'creator/CreatorToken.sol';
 import 'market/Market.sol';
 
-contract DroneEmployee is DroneEmployeeInterface {
+contract DroneEmployee is DroneEmployeeInterface, Streaming {
     /* Flight regulator */
     AirTrafficControllerInterface atc;
 
@@ -13,6 +14,10 @@ contract DroneEmployee is DroneEmployeeInterface {
 
     /* Price of one drone flight */
     uint public flightPrice = 10;
+
+    /* Price of streaming from drone */
+    uint public streamPrice = 2;
+    bool public videoStream = false;
 
     function setFlightPrice(uint _price) onlyOwner
     { flightPrice = _price; }
@@ -23,21 +28,37 @@ contract DroneEmployee is DroneEmployeeInterface {
     function DroneEmployee(string  _name,       // Drone name
                            address _baseCoords, // Drone base
                            address _atc,      // Air traffic regulator
-                           address _market, address _credits) { // DAO market and token
+                           address _market,
+                           address _credits,
+                           bool _video_streaming) { // DAO market and token
         name    = _name;
         base    = SatFix(_baseCoords);
         atc     = AirTrafficControllerInterface(_atc);
         market  = Market(_market);
         credits = Token(_credits);
+        videoStream = _video_streaming;
+    }
 
+    function init() onlyOwner {
         /* Make a token and place token on the market */
         tickets = CreatorToken.create("DroneEmployee Ticket", "DET", 0, 1);
         placeTicket();
+
+        /* Init streaming with new token */
+        if (videoStream) {
+            initStreaming(CreatorToken.create("DroneEmployee video stream", "DVS", 0, 1));
+            tradeStream();
+        }
     }
 
     function placeTicket() internal {
         var lot = market.append(this, tickets, credits, 1, flightPrice);
         tickets.approve(lot, 1);
+    }
+
+    function tradeStream() internal {
+        var lot = market.append(this, streamToken, credits, 1, streamPrice);
+        streamToken.approve(lot, 1);
     }
 
     function buyATCToken() internal returns (bool) {
@@ -54,7 +75,7 @@ contract DroneEmployee is DroneEmployeeInterface {
         }
 
         /* Approve lot and deal */
-        credits.approve(found, found.price());
+        credits.approve(found, found.quantity_buy());
         if (!found.deal()) {
             credits.unapprove(found);
             return false;

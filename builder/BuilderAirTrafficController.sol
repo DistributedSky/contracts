@@ -11,10 +11,6 @@ import 'builder/Builder.sol';
  * @title BuilderDroneEmployee contract
  */
 contract BuilderAirTrafficController is Builder {
-    function BuilderAirTrafficController(uint _buildingCost, address _cashflow, address _proposal)
-             Builder(_buildingCost, _cashflow, _proposal)
-    {}
-    
     /**
      * @dev Run script creation contract
      * @param _name is an ATC name
@@ -25,7 +21,7 @@ contract BuilderAirTrafficController is Builder {
      * @return address new contract
      */
     function create(string _name,
-                    SatFix[] _area,
+                    address[] _area,
                     Market _market,
                     Token _credits,
                     address _endpoint) returns (address) {
